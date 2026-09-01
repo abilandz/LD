@@ -10,14 +10,15 @@ Extended version worth 1 full semester of lecturing can be found at the TUM webs
 
 ### Outline:
 **Day 1 (morning):**
-* [Introduction to Linux OS and shell scripting](1_1/1_1.md)
-* [Shell environment: commands, variables, configuration files](1_2/1_2.md)
-* [Your first shell script](1_3/1_3.md)
+* [Introduction to Linux OS and shell scripting](Day_1/morning/Section_1_1/Section_1_1.md)
+* [Shell environment: commands and variables](Day_1/morning/Section_1_2/Section_1_2.md)
+* [Special configuration files](Day_1/morning/Section_1_3/Section_1_3.md)
+* [Your first shell script](Day_1/morning/Section_1_4/Section_1_4.md)
 
-**Day 2 (afternoon):**
-* [Basic Linux utilities and file metadata](1_4/1_4.md)
-* [Shell functions](1_5/1_5.md)
-* [Shell as a programming language](1_6/1_6.md)
+**Day 1 (afternoon):**
+* [Basic Linux utilities and file metadata](Day_1/afternoon/Section_1_1/Section_1_1.md)
+* [Shell functions](Day_1/afternoon/Section_1_2/Section_1_2.md)
+* [Shell as a programming language](Day_1/afternoon/Section_1_3/Section_1_3.md)
 
 
 
