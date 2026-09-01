@@ -1,6 +1,6 @@
 ### Introduction
 
-**Last update**: 20260901
+**Last update**: 20260901-2
 
 This webpage contains the material for the crash course on Linux OS and Bash shell offered in Darmstadt, in September 2026.
 
@@ -9,14 +9,14 @@ Extended version worth 1 full semester of lecturing can be found at the TUM webs
 
 ### Outline:
 **Day 1 (morning):**
-* [Introduction to Linux OS and shell scripting](./1_1/1_1.md)
-* [Shell environment: commands, variables, configuration files](./1_2/1_2.md)
-* [Your first shell script](./1_3/1_3.md)
+* [Introduction to Linux OS and shell scripting](1_1.md)
+* [Shell environment: commands, variables, configuration files](1_2.md)
+* [Your first shell script](1_3.md)
 
 **Day 2 (afternoon):**
-* [Basic Linux utilities and file metadata](./1_4/1_4.md)
-* [Shell functions](./1_5/1_5.md)
-* [Shell as a programming language](./1_6/1_6.md)
+* [Basic Linux utilities and file metadata](1_4.md)
+* [Shell functions](1_5.md)
+* [Shell as a programming language](1_6.md)
 
 
 
