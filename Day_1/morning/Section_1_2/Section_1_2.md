@@ -1,8 +1,8 @@
 ![](../../../Common_Figures/LinuxBash_logos_small.png)
 
-# Shell environment: commands, variables, configuration files
+# Shell environment: commands and variables
 
-**Last update**: 20260901-6
+**Last update**: 20260901-7
 
 ### Table of Contents
 
