@@ -1,0 +1,5 @@
+![](../../../Common_Figures/LinuxBash_logos_small.png)
+
+Introductory slides presented at the very beginning of this crash course, can be downloaded both in .pdf and .pptx formats from the following direct link: 
+
+* [Introductory slides](https://cernbox.cern.ch/s/a5xL9hP04Dx0lyY)

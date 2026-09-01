@@ -1,0 +1,89 @@
+![](../../../Common_Figures/LinuxBash_logos_small.png)
+
+# Special configuration files
+
+**Last update**: 20260901-1
+
+### Table of Contents
+
+1. [Special configuration files in **Bash**](configuration-files)
+   * [User's configuration files](users)
+   * [System-wide (default) configuration files](system)
+
+
+By convention, the name of all configuration files in the home directory begins with `.` (dot), which means that **ls** will not list them by default.
+
+#### User's configuration files <a href="#users" id="users"></a>
+
+These are the personal configuration files in the user's home directory, which can be edited directly:
+
+* `~/.bash_profile` &mdash; this configuration file is only executed by **Bash** each time you log in to the computer, i.e. it is executed by the _login shell_. There are two synonyms for this file: `~/.bash_login` and `~/.profile` , and they are executed at login only if `~/.bash_profile` is not present in your home directory. The files `~/.bash_profile` and `~/.bash_login` can be read only by the login instance of **Bash** shell, while `~/.profile` is also read by some other shells, e.g. **sh** and **ksh**.
+* `~/.bashrc` &mdash; this configuration file is read with the highest priority when you open a new terminal, or in general, whenever you start in its own process a new instance of **Bash** shell after you are already logged in. This file will also be read at login only if you add a line `source ~/.bashrc` in `~/.bash_profile` .
+* `~/.bash_logout` &mdash; executed whenever the login shell exits (e.g. when you log out from the computer). This configuration file is rarely used, but by editing it, you can for instance automatically delete all temporary files at exit.
+
+#### System-wide (default) configuration files <a href="#system" id="system"></a>
+
+If by accident you have deleted your personal configuration files in your home directory, as a backup solution you can always rely on the two system-wide configuration files, which you cannot edit directly without having the administrator privileges:
+
+* `/etc/profile` &mdash; the default, system-wide, configuration file which is read at login. It is read before `~/.bash_profile`. This means that you will always have some default settings enabled after you log in on the computer, whether or not `~/.bash_profile` with your personal settings exists or not.
+* `/etc/bash.bashrc` &mdash; the default, system-wide, configuration file which is read each time you open a new terminal or start a new instance of **Bash** shell in its own process after you are already logged in. It is read before `~/.bashrc`. This means that you will always have some default settings enabled after you open a new terminal or start a subshell, whether or not `~/.bashrc` with your personal settings exists or not.
+
+We now elaborate on the usage of these configurations files by considering a few concrete examples.
+
+**Example 1:** _Changing a default shell on remote computer_. You got access rights to some remote computer, and the admin responsible for it has set the old Bourne shell **sh** to be the default login shell. How to switch automatically at login to the **Bash** shell (or to any other shell you prefer)?
+
+First, you have to figure out which configuration file is read by **sh** at login, and that turns out to be the special configuration file `~/.profile`. If you add to that file a single line with the following content,
+
+```bash
+bash
+```
+
+each time you login on that remote computer, **sh** will execute the content of `~/.profile`, i.e. it will start the **Bash** shell for you automatically, which in turn at its startup will read some of its own configuration files discussed above. The net effect is that you will transparently run and configure the **Bash** shell at login on a remote computer, even though it is not the default shell on that computer.
+
+**Example 2:** _Making definitions of variables and aliases permanent_. We have already seen how to define your own aliases and variables and we already stressed out one important point: Their lifetime is limited to the duration of the terminal session in which you have defined them. In any new terminal you start, their definitions are not known. But there is one important thing which happens behind the scene each time you start a new terminal, and before you can start typing anything &mdash; **Bash** reads automatically the configuration files end executes line-by-line whatever is being set in them.
+
+In the most cases of interest, it suffices to know that you need to edit directly your personal file, e.g. `~/.bash_aliases`, and then in the **Bash** configuration files `~/.bash_profile` and `~/.bashrc`, both of which must be stored directly in your home directory, you insert the line (if this line is already not inside those files &mdash; by default it is already inside on most **Linux** distributions):
+
+```bash
+source ~/.bash_aliases
+```
+
+For instance, let us edit in your home directory the file named `~/.bash_aliases` (any other name is perfectly fine as this is your personal file, not a special configuration file!). We start by executing in the terminal:
+
+```bash
+nano ~/.bash_aliases
+```
+
+And then in **nano** write the following two lines:
+
+```bash
+Var=44
+alias sl=ls
+```
+
+Save the file and exit **nano** (press `CTRL+x` and choose 'y' followed by 'Enter'). You can check the content of file `~/.bash_aliases` via
+
+```bash
+cat ~/.bash_aliases
+```
+
+or, if the file got too lengthy and you need to scroll page-by-page, via
+
+```bash
+more ~/.bash_aliases
+```
+
+Since the content of `~/.bashrc` file is read and executed each time you start a new terminal, and before you can start typing anything in the terminal, your own personal definitions (e.g. for aliases and variables) will be re-defined from scratch each time you start a new terminal, and you can re-use them again and again.
+
+Each time you run a new terminal, the variable `Var` is set to 44, and you can use **sl** as the synonym for the **ls** command, i.e. you do not need to define them again in the new terminal sessions. In the case you need to add more aliases, simply edit again the file `~/.bash_aliases` .
+
+We remark that it is much safer to edit directly `~/.bash_aliases` than to edit directly the file `~/.bashrc`, where also some other and more important settings can be defined as well. In the case you move to another computer, you can enable your aliases there simply by porting the file `~/.bash_aliases` , and adding on the new computer in `~/.bashrc` and `~/.bash_profile` the line `source ~/.bash_aliases`. On the other hand, typically it's very difficult to port the entire `~/.bashrc` from one computer to another, especially if they are running different **Linux** distributions.
+
+**Example 3:** _Automating some work at logout_. We can also edit the `~/.bash_logout` in the following example way:
+
+```bash
+# Set what will be executed when shell exits (e.g. when you close the terminal):
+echo "Hasta la vista, that was all for today."; sleep 1s
+```
+
+Now each time you close the terminal in which you are running the instance of login shell (e.g. when logging out from remote computer), you will see the specified printout, and after the hardwired timeout of 1s, the terminal will close. In the very same spirit, you can specify any other action, which will be automatically executed by **Bash** when you close the terminal running the login shell.
