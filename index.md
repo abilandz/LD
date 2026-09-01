@@ -1,8 +1,8 @@
-<img src=./Common_Figures/LinuxBash_logos.png width="750" />
+![](./Common_Figures/LinuxBash_logos.png)
 
 ### Introduction
 
-**Last update**: 20260901-3
+**Last update**: 20260901-4
 
 This webpage contains the material for the crash course on Linux OS and Bash shell offered in Darmstadt, in September 2026.
 
