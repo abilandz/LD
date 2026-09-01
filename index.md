@@ -1,3 +1,5 @@
+<img src=./Common_Figures/LinuxBash_logos.png width="750" />
+
 ### Introduction
 
 **Last update**: 20260901-3
@@ -5,7 +7,6 @@
 This webpage contains the material for the crash course on Linux OS and Bash shell offered in Darmstadt, in September 2026.
 
 Extended version worth 1 full semester of lecturing can be found at the TUM website at the following public [link]( https://academics.nat.tum.de/org/mh/details/mod/PH8124/ ).
-
 
 ### Outline:
 **Day 1 (morning):**
