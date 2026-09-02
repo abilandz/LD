@@ -1,6 +1,7 @@
 ![](../../../Common_Figures/LinuxBash_logos_small.png)
 
 # Linux file system and core utilities
+
 **Last update**: 20260902-1
 
 ### Table of Contents

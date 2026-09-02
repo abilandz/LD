@@ -2,12 +2,12 @@
 
 # File metadata and permissions
 
-**Last update**: 20260902-1
+**Last update**: 20260902-2
 
 ### Table of Contents
 
-1. [File metadata](file_metadata)
-2. [Permissions](permissions)
+1. [File metadata](#file_metadata)
+2. [Permissions](#permissions)
 
 ### 1. File metadata <a href="#file_metadata" id="file_metadata"></a>
 
