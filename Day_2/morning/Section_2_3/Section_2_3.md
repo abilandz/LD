@@ -1,0 +1,107 @@
+![](../../../Common_Figures/LinuxBash_logos_small.png)
+
+# Pipes
+
+**Last update**: 20260903-1
+
+### Table of Contents
+
+1. [Pipes](#pipes)
+
+
+### 1. Pipes: `|` <a href="#pipes" id="pipes"></a>
+
+We have already seen that commands can take their input directly from the user or from files. But in general, one command can take directly the output of another command as its input. This mechanism is called a _pipe_ and is a very generic concept in **Linux**.
+
+To use the output of one command as the input to another, we use operator `|` ('pipe'), schematically as:
+
+```bash
+firstCommand | secondCommand
+```
+
+It is possible to chain with the pipe operator `|` multiple commands:
+
+```bash
+firstCommand | secondCommand | thirdCommand | ...
+```
+
+In the above example, the successful output, i.e., the _stdout_ stream of `firstCommand` has become the input, i.e., the _stdin_, to `secondCommand`. That command now processes that input, and produces its own output, which is then becoming the input to `thirdCommand`, and so on.
+
+We remark that each command in the pipe can be implemented in a different programming language. This way, the pipe mechanism enables modularity in project design across different programming languages, in a manner analogous to how modularity is achieved by implementing separate functions within a given language.
+
+It is possible to redirect simultaneously both _stdout_ and _stderr_ stream of one command into _stdin_ of another, with the slightly modified pipe operator `|&`, schematically:
+
+```bash
+firstCommand |& secondCommand
+```
+
+In the above example, both the successful output stream and the error message of the first command are simultaneously redirected as an input to the second command.
+
+Using pipe `|` eliminates the need to make temporary files to redirect and store the output of one command and then supply that temporary file as an input to another command. The data flow among all commands chained with `|` in the pipeline is automated without any restriction on the size.
+
+We now provide a few frequently use cases of pipes. We have already seen that **Bash** supports directly only integer arithmetic within the mathematical environment `(( ... ))` (the support for floating point arithmetics was introduced starting with version 5.3 in 2025, but only using **fltexpr** loadable builtin). The floating-point arithmetic in **Bash** can be done by piping the desired expression into the external **Linux** program called **bc** ('basic calculator').
+
+**Example 1:** How would you divide 10/7 at the precision of 30 significant digits?
+
+The solution is given by the following:
+
+```bash
+$ echo "scale=30; 10/7" | bc
+1.428571428571428571428571428571
+```
+
+The internal keyword **scale** sets the precision in **bc** program. Instead of using **bc** interactively and providing via keyboard _stdin_ for its execution, we have just piped the _stdout_ of **echo** as an input to **bc**.
+
+For more sophisticated use cases, for instance when using special mathematical functions, etc., use **bc -l**. The flag '-l' (ell) additionally loads in the memory the heavy mathematical libraries, which are otherwise not needed for simple calculations. If the precision is not specified with keyword **scale**, it is defaulted to 1 when only **bc** is executed, and to 20 when **bc -l** is executed.
+
+The math library of **bc** defines the following example functions:
+
+```bash
+s(x) : The sine of x, x is in radians.
+c(x) : The cosine of x, x is in radians.
+a(x) : The arctangent of x, arctangent returns radians.
+l(x) : The natural logarithm of x.
+e(x) : The exponential function of raising e to the value x.
+j(n,x) : The bessel function of integer order n of x.
+```
+
+**Example 2:** How would you calculate `e^2` to the precision of 20 significant digits?
+
+```bash
+$ echo "e(2)" | bc -l
+7.38905609893065022723
+```
+
+Another typical use case of the pipe operator `|` is in combination with the **tee** command. Quite frequently, when a specific command is executing, we would like to see its output on the screen, but also simultaneously redirected to some file, so that at any time later, we can carefully inspect the whole command output by reading through the content of that file.
+
+This can be achieved with the **tee** command schematically as:
+
+```bash
+someCommand | tee someFile.log  
+```
+
+For instance, the code snippet:
+
+```bash
+date | tee date.log
+```
+
+will print the current time on the screen, but it will also simultaneously dump it in the file named `date.log` (check its content with **cat date.log**). In the very same spirit, it is possible to keep the full execution log of any script, function, code block `{ ... }`, loops, etc.
+
+The command **tee** writes simultaneously its input to _stdout_ (screen) and redirects it to files. By default, **tee** overwrites the content of a file &mdash; if we want instead to append to the already existing non-empty file, the following version can be used:
+
+```bash
+someCommand | tee -a someFile.log 
+```
+
+Flag '-a' in this particular case stands for 'append'.
+
+As the final remark on the pipelines, we consider the following important question: If the pipeline, composed of multiple commands, has failed during execution, how do we figure out programmatically which particular command in the pipeline has failed? To answer this question, we need to inspect the status of the built-in variable **PIPESTATUS**. This variable is an array holding the exit status of each command in the last executed pipeline:
+
+```bash
+$ echo "scale=5000; e(2)" | bc -l | more
+$ echo ${PIPESTATUS[*]}
+0 0 0 # exit status of the last command ('echo', 'bc' and 'more') in the pipe above 
+```
+
+In the above example, we want to determine the result to 5000 significant digits, and then inspect through it screen-by-screen with the **more** command. All three commands in the pipeline, **echo**, **bc** and **more**, executed successfully; therefore, the array **PIPESTATUS** holds three zeros. When only the single command has been executed, that is a trivial pipeline, and the **PIPESTATUS** array has only one entry, the very same information that is stored in the special **$?** variable. The thing to remember is that **PIPESTATUS** gets updated each time we execute the command, even the trivial ones like **echo**.

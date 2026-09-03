@@ -1,0 +1,847 @@
+![](../../../Common_Figures/LinuxBash_logos_small.png)
+
+# Programmmatic text processing: grep, awk, and sed
+
+**Last update**: 20260903-1
+
+### Table of Contents
+
+1. [**grep**](#grep)
+2. [**awk**](#awk)
+3. [**sed**](#sed)
+
+
+A text must frequently be parsed through, inspected, or updated after the search for some patterns has been performed. In general, we want to be able to modify programmatically some text for one reason or another. The text in this context can stand for any textual stream coming out of command upon execution or any text saved in a physical file. Clearly, there are cases in which it is impractical or even unfeasible to make all such changes in some graphics-based editors. In this section, we cover how the text can be manipulated programmatically with the three core **Linux** commands: **grep**, **awk** and **sed**. Combining functionalities of all three of them gives a lot of power when it comes to programmatic text manipulation, and typically covers all cases of practical interest. The usage of these three commands is best learned from concrete examples.
+
+### **1. grep** <a href="#grep" id="grep"></a>
+
+The command **grep** ('Globally search a Regular Expression and Print') filters out from the command output or the physical file the lines containing a certain pattern. Typically, this command is used as follows:
+
+```bash
+grep SomePattern(s) SomeFile(s)
+```
+
+The above syntax will select from the specified files only the lines that conform to the specified patterns, and print them on the screen.
+
+Another frequent use case is:
+
+```bash
+SomeCommand | grep SomePattern(s)
+```
+
+The above syntax will select on-the-fly from the output stream of a command only the lines which conform to the specified patterns, and will print them on the screen.
+
+**Example 1:** Copy and paste in the file `grepExample.txt` the following lines:
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+TeST1 TEST1 TESt1 TEST1 TEST1
+test TEST Test 11test test
+TeST2 TEST2 TEsT2 TEST2 tEST2
+```
+
+By using this example file, we now demonstrate the most frequently used cases of **grep** command:
+
+```bash
+grep "test" grepExample.txt 
+```
+
+The output is:
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+test TEST Test 11test test
+```
+
+By default, the specified pattern ('test' in the above example) is case sensitive and it does not have to be an exact match, therefore here the text '11test', 'test22' and 'test' were all the matching patterns. Each line which contains one or more of matching patterns is printed by **grep** on the screen by default, but it can be also redirected to a physical file:
+
+```bash
+grep "test" grepExample.txt > filtered.txt
+```
+
+In the next example, we instruct **grep** to use a flag '-n', to print all lines containing the pattern 'test' alongside the numbers of those lines:
+
+```bash
+grep -n "test" grepExample.txt
+```
+
+The result is:
+
+```
+1:TEST Test test 11test test22
+2:test TEST Test 11test test22
+4:test TEST Test 11test test
+```
+
+We can easily inverse the pattern search when we need to print all lines in a file that do not contain the pattern 'test' by using the flag '-v':
+
+```bash
+grep -v "test" grepExample.txt
+```
+
+Now, only the lines that do not contain the pattern 'test' are printed on the screen:
+
+```
+TeST1 TEST1 TESt1 TEST1 TEST1
+TeST2 TEST2 TEsT2 TEST2 tEST2
+```
+
+When we need case-insensitive search, we can use the flag '-i':
+
+```bash
+grep -i "test" grepExample.txt
+```
+
+This prints all lines in the file which contain all case-insensitive variants of pattern 'test', e.g. 'TEST', 'Test', 'tEsT, etc.:
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+TeST1 TEST1 TESt1 TEST1 TEST1
+test TEST Test 11test test
+TeST2 TEST2 TEsT2 TEST2 tEST2
+```
+
+Since each line has at least one case-insensitive variant of the specified pattern 'test', the whole file is printed in this example.
+
+Very frequently, we need to filter out all lines in the file that contain the specified pattern only at the very beginning of the line. This is achieved by using the special character `^` (caret):
+
+```bash
+grep "^test" grepExample.txt
+```
+
+This results in:
+
+```
+test TEST Test 11test test22
+test TEST Test 11test test
+```
+
+The special character `^` is an anchor for the beginning of a line, and many other commands interpret this character in the same fashion. Opposite to it, if we need to print all lines in the file which contain the specified pattern only at the end of the line, we need to use `$` :
+
+```bash
+grep "t22$" grepExample.txt
+```
+
+The result is the following two lines:
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+```
+
+In this particular context, the special character `$` is an anchor for the end of a line.
+
+We can perform the pattern search with **grep** even more differentially. If we need to filter out all lines in the file that contain at least one word _beginning_ with the specified pattern, we need to use `\<`. For instance, we can proceed in the following way:
+
+```bash
+grep "\<TeST" grepExample.txt
+```
+
+Now both 'TeST1' and 'TeST2' will match since they begin with the specified pattern 'TeST', and the result is:
+
+```
+TeST1 TEST1 TESt1 TEST1 TEST1
+TeST2 TEST2 TEsT2 TEST2 tEST2
+```
+
+Complementary to this option, we can filter out all lines in the file that contain at least one word _ending_ with the specified pattern:
+
+```bash
+grep "ST\>" grepExample.txt
+```
+
+Now only 'TEST' will match, because this is the only word in the file which ends up with the specified pattern 'ST', and in the printout we get these three lines that contain the word 'TEST':
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+test TEST Test 11test test
+```
+
+When it comes to the exact pattern match, we need to use the flag '-w':
+
+```bash
+grep -w "Test" grepExample.txt
+```
+
+This yields the following printout:
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+test TEST Test 11test test
+```
+
+Each of these three lines has at least one exact occurrence of the specified pattern 'Test'.
+
+Sometimes it can be desired to print differentially only the matched parts of a matching line, with each such part on a separate output line. This can be achieved with the flag '-o':
+
+```bash
+$ echo "a test Test b test" | grep -o test
+test
+test
+$ echo "a test Test b test" | grep -o -i test
+test
+test
+Test
+```
+
+It is also possible to combine patterns with the special character `\|`:
+
+```bash
+grep "11test\|test22" grepExample.txt
+```
+
+This prints all lines containing either the pattern '11test' or 'test22' (basically, in **grep** `\|` acts as a logical OR operation):
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+test TEST Test 11test test
+```
+
+We cannot directly use **grep** to obtain the logical AND operation in the pattern search, but this limitation can be circumvented with the usage of pipe:
+
+```bash
+grep "11test" grepExample.txt | grep "test22"
+```
+
+This will print all lines that contain both specified patterns "11test" and "test22":
+
+```
+TEST Test test 11test test22
+test TEST Test 11test test22
+```
+
+In this example, the first **grep** in the pipeline acted on a physical file, while the second **grep** got its input from the output stream of the first **grep**. Whether the input to **grep** comes from the physical file, or via pipe `|` from the _stdout_ or _stderr_ stream of some other command, its usage is entirely equivalent.
+
+For instance, you can check if the variable contains some pattern schematically with:
+
+```bash
+echo "$Var" | grep SomePattern(s)
+```
+
+In cases where only the check for the pattern needs to be performed with **grep**, and there is no need for the actual printout, we can use the flag '-q' (for quite), like in this example:
+
+```bash
+if grep -q "11test" grepExample.txt; then
+ ... some code ...
+elif grep -q "test22" grepExample.txt; then
+ ... some other code ...
+else
+ ... yet another code ...
+fi
+```
+
+**Example 2:** How to select in the current working directory only the files whose names begin with the example pattern 'ce' and end up with the pattern '.dat'? The content of the directory is:
+
+```
+array.sh   be3.dat  be8.dat  ce1.log  ce4.dat  ce6.log  ce9.dat
+array.sh~  be4.dat  be9.dat  ce2.dat  ce4.log  ce7.dat  ce9.log
+be0.dat    be5.dat  ce0.dat  ce2.log  ce5.dat  ce7.log  grepExample.txt
+be1.dat    be6.dat  ce0.log  ce3.dat  ce5.log  ce8.dat  test.sh
+be2.dat    be7.dat  ce1.dat  ce3.log  ce6.dat  ce8.log  test.sh~
+```
+
+The solution is:
+
+```bash
+ls | grep "^ce" | grep ".dat$"
+```
+
+The **ls** command will print the list of all files in the current directory, and pipe that list to **grep** for further filtering. Then **grep** filters out the lines in the output of **ls** which begin (the anchor `^`) with the pattern 'ce'. That result is then filtered further by chaining another pipe. In the 2nd **grep** we used the anchor `$` since we are interested in the ending '.dat'. The final output is:
+
+```bash
+ce0.dat
+ce1.dat
+ce2.dat
+ce3.dat
+ce4.dat
+ce5.dat
+ce6.dat
+ce7.dat
+ce8.dat
+ce9.dat
+```
+
+Next, we mention the flag '-r', which will force **grep** to search for specified patterns recursively in all files of specified directories, their subdirectories, etc. Generic syntax is:
+
+```bash
+grep -r somePattern dir1 dir2 ...
+```
+
+If directories are not specified, the top-level search directory is defaulted to the current working directory, and then the search is performed in all files in all its subdirectories.
+
+**Example 3:** Print all lines in all files in this lecture's documentation containing the word "Bash".
+
+````bash
+$ grep -r "Bash" ~/Lectures/PH8124
+/home/abilandz/Lectures/PH8124/Homeworks/Homework_1.md:# Using **Bash** aliases as your simplest commands
+/home/abilandz/Lectures/PH8124/Homeworks/Homework_1.md:**Challenge #1**: Develop a **Bash** script named ```timeZones.sh``` which is used as
+/home/abilandz/Lectures/PH8124/Homeworks/Homework_2.md:# Using external executable as Linux/Bash command
+
+... many more lines ...
+````
+
+Finally, we clarify how to use **grep** to extract lines holding patterns which have the same syntax as **grep** options.
+
+**Example 4:** Filter out lines holding the pattern '-v' from the following file 'example\_4.txt':
+
+```bash
+a b c
+-v
+1 2 -v 3
+-a
+```
+
+Naively, one proceeds as follows:
+
+```bash
+$ grep -v example_4.txt
+```
+
+and nothing happens &mdash; **grep** is hanging, because it interpreted '-v' as an option, not the search pattern. After that, it mistakenly interpreted the file name 'example\_4.txt' as a search pattern. Finally, there are no further arguments on the command line, **grep** doesn't see the file it needs to search through, and is therefore expecting command input to be provided interactively from _stdin_ (i.e. from keyboard). To circumvent this general problem, a double dash `--` is used in most commands, not only in **grep**, to signify the end of command options, after which only arguments are accepted. Therefore, the correct solution is:
+
+```bash
+$ grep -- -v example_4.txt
+-v
+1 2 -v 3
+```
+
+After `--` in the command input above, '-v' is no longer an internally supported option in **grep**; instead it becomes an ordinary argument, which in this context is interpreted by **grep** as a literal search pattern '-v' for the file specified via the next argument.
+
+We close this section by indicating that **grep** by default supports _"Basic Regular Expressions (BRE)"_, its variants **grep -E** or **egrep** support _"Extended Regular Expressions (ERE)"_, and **grep -P** supports _"Perl-Compatible Regular Expressions (PCRE)"_.
+
+### 2. **awk** <a href="#awk" id="awk"></a>
+
+Now we move to **awk** (named after the initials of its authors: Aho, Weinberg and Kernighan), which is not only a core Linux utility but a full-fledged programming language, designed for text processing. One can easily teach the whole semester only about **awk**, here we will cover only its most important functionalities which are not available as built-in **Bash** functionalities. The frequently heard comment about **awk** is that its syntax and usage are awkward. Nevertheless, in many cases of practical interest, **awk** provides the best, simplest and most elegant solution.
+
+The general structure of **awk** program is as follows:
+
+```bash
+awk someOptions(s) '
+  PATTERN_1 { ACTION_1 }
+  PATTERN_2 { ACTION_2 }
+  ...
+' someFile(s)
+```
+
+or equivalently a one-liner:
+
+```bash
+awk someOptions(s) ' PATTERN_1 { ACTION_1 } PATTERN_2 { ACTION_2 } ... ' someFile(s)
+```
+
+Each line of input is matched against each `PATTERN`, and whenever the pattern is matched, the corresponding `ACTION` is executed for that line.
+
+A few remarks on the general **awk** syntax above:
+
+* `someOptions(s)` &mdash; these are the options which **awk** supports internally and which can be used to modify its default behavior, in an analogous way as for other Linux commands (check the **awk**'s manual pages for further details);
+* `'...'` &mdash; when **awk** programme is specified directly in the terminal (and not written and read from a file as an **awk** script), it has to be embedded within the strong quotes `'...'`, so that during parsing of the command input shell does not attempt to interpret it itself (shell quoting rules are discussed in detail in the next lecture);
+* `PATTERN` &mdash; can be a numerical expression, a string relation, or a regular expression. In the latter case, `PATTERN` must be enclosed with slashes, i.e. **awk** will interpret `/ab*/` as a pattern corresponding to the regular expression `ab*`, where `*` acquires a metacharacter meaning, i.e. it's not a literal `*` character. We remark that unlike **grep**, **awk** by default supports _"Extended Regular Expressions (ERE)"_. On the other hand, if `PATTERN` is specified for instance as `length > 0`, **awk** will interpret it as a numerical expression, in which **awk** is checking if the length of the line is bigger than 0 (`length` is an internal variable in **awk**, calculated automatically for each line of input). If `PATTERN` is not specified, all lines of input are trivially matched;
+* `ACTION` &mdash; written in an internal language whose syntax is similar to the **C** programming language. If the corresponding `PATTERN` is matched for a line of input, this `ACTION` will be executed for that line. If `ACTION` is not specified, it defaults to printing the whole line that matched the corresponding `PATTERN`;
+* `someFiles()` &mdash; one or more files which **awk** will parse line-by-line automatically. During parsing, each line of a file becomes a line of input to **awk**, on which `PATTERN { ACTION }` sequences are tested and executed.
+
+The above general syntax is demonstrated on the example file `test.txt` with the following content:
+
+```bash
+abc
+abcefgh 9876 
+12345
+```
+
+To print all lines whose length is less than 6 characters, we proceed as follows:
+
+```bash
+$ awk 'length < 6 { print }' test.txt
+abc
+12345
+```
+
+The `PATTERN` is a numerical expression `length < 6`, and the `ACTION` is `{ print }`, i.e. all lines whose length is less than 6 characters are printed (since the default action is to print the matched line, in this simple example `{ print }` could be dropped).
+
+To print the length of all lines that contain the pattern `abc`, we use the syntax `/.../` for patterns that need to be interpreted as regular expressions:
+
+```bash
+$ awk '/abc/ { print length }' test.txt
+3
+13
+```
+
+We can apply both `PATTERN` and `ACTION` sequences from above:
+
+```bash
+$ awk 'length < 6 { print } /abc/ { print length }' test.txt
+abc
+3
+13
+12345
+```
+
+Patterns can be grouped for the same action with the standard syntax for logical AND and OR operations using `&&` and `||` operators:
+
+```bash
+$ awk 'length < 6 && /abc/ { print }' test.txt 
+abc
+
+$ awk 'length < 6 || /abc/ { print }' test.txt 
+abc
+abcefgh 9876 
+12345
+```
+
+Finally, multiple actions can be specified for the same pattern:
+
+```bash
+$ awk 'length < 6 { print; print length; }' test.txt 
+abc
+3
+12345
+5
+```
+
+After we supply some input to **awk**, it will break each line of input into fields, which by default are separated with one or more empty characters. After that, **awk** parses the input and operates on each separate field. Just like with the **grep** command, **awk** can take its input either from a physical file, or from the output stream of another command via a pipe. For instance, if a specific command has produced an output that consists of column-wise entries separated by one or more empty characters, we can get hold of each field programmatically. For instance:
+
+```bash
+$ date
+Wed Jun  3 15:36:12 CEST 2020
+$ date | awk '{print $4}'
+15:36:12
+```
+
+In the 2nd command input above, by using **awk**, we have isolated directly only the 4th field in the output of **date**. In a similar fashion:
+
+```bash
+$ date | awk '{print $6}'
+2020
+```
+
+prints only the year, because the 6th field in the output of **date** is reserved for a year.
+
+We can select multiple fields and immediately on-the-fly do some additional editing:
+
+```bash
+$ date | awk '{print $4, "some text", $6}'
+15:36:12 some text 2020
+```
+
+In the same way **awk** operates on the file content. It is very convenient, for instance, to use **awk** to extract only the values from the specified column(s) in a file. For example, if the content of the file `someFile.dat` is:
+
+```bash
+a 1
+yy 10
+c 44
+```
+
+we can extract the columns separately with
+
+```bash
+$ awk '{print $1}' someFile.dat
+a
+yy
+c
+```
+
+and
+
+```bash
+$ awk '{print $2}' someFile.dat
+1
+10
+44
+```
+
+Typically, one can store such an output in an array and then process further programmatically all entries with the following code snippet that combines a few different functionalities covered by now:
+
+```bash
+$ SomeArray=( $(awk '{print $2}' someFile.dat) )
+$ echo ${SomeArray[*]}
+1 10 44
+```
+
+To get the total number of fields, we can use **awk** built-in variable **NF**:
+
+```bash
+$ date
+Wed Jun  3 15:36:12 CEST 2020
+$ date | awk '{print NF}'
+6
+```
+
+Since the output stream of **date** has 6 entries separated by the empty character, we got 6 as the total number of fields.
+
+The entry from the last field can be achieved directly by obtaining the content of **NF** variable:
+
+```bash
+$ date | awk '{print $NF}'
+2020
+```
+
+Similarly, the entry from the penultimate field can be obtained directly with:
+
+```bash
+$ date | awk '{print $(NF-1)}'
+CEST
+```
+
+and so on.
+
+But what if we want to parse the command output or the file content even more differentially? For instance, what if we want to extract programmatically from the output of the **date** command only the seconds, and not the full timestamp '15:36:12' by specifying the 4th field? To achieve that, we need to change the field separator in **awk** to some non-default value. This is achieved by manipulating the **awk** built-in variable **FS**. To set the field separator variable **FS** to some non-default value, we use schematically the following syntax:
+
+```bash
+awk 'BEGIN {FS="some-new-single-character-field-separator"} ... '
+```
+
+The key word 'BEGIN' next to the code snippet enclosed in `{ ... }` ensures that that particular code snippet is executed only once, at the very beginning (analogously, there exists a key word 'END' in **awk** with the opposite meaning, i.e., that code snippet is executed only once at the very end).
+
+For instance, if we want to use colon `:` as a field separator in **awk**, we must start with the following:
+
+```bash
+awk 'BEGIN {FS=":"} ... '
+```
+
+Therefore, to extract only the seconds from the output of the **date** command, we can use the following code snippet:
+
+```bash
+$ date
+Wed Jun  3 16:18:44 CEST 2020
+$ date | awk '{print $4}' | awk 'BEGIN {FS=":"}{print $3}'
+44
+```
+
+What happened above is literally the following:
+
+1. the command **date** produced the output stream `Wed Jun 3 16:18:44 CEST 2020`
+2. that output was piped as an input for further processing to **awk** command, which extracted the 4th field, taking into account that the default field separator is one or more empty characters. The result after this step was `16:18:44`
+3. this intermediate output stream `16:18:44` was then sent via another pipe to **awk** command, which, however, in the 2nd pipe runs with non-default field separator `:` . With respect to `:` as a field separator in the stream `16:18:44`, the 3rd field is seconds, which yields as the final output `44`
+
+As a rule of thumb, field separators in **awk** shall always be single characters &mdash; composite multi-character field separators are possible, but can lead to some inconsistent behaviour among different **awk** versions (e.g. **gawk**, **mawk**, **nawk**, etc.).
+
+Very conveniently, with **awk** we can also calculate directly the length of the field, for instance:
+
+```bash
+echo "a:12345:b34d" | awk 'BEGIN {FS=":"}{print length($1)}' # prints 1
+echo "a:12454:b34d" | awk 'BEGIN {FS=":"}{print length($2)}' # prints 5
+echo "a:12345:b34d" | awk 'BEGIN {FS=":"}{print length($3)}' # prints 4
+```
+
+On the other hand, multiple single characters can be treated as field separators simultaneously &mdash; they just all need to be embedded within `[ ... ]`. For instance, we can treat during the same **awk** execution all three characters colon `:`, semi-colon `;` and comma `,` as equivalent field separators in the following code snippet:
+
+```bash
+echo "1,22;abc:44:1000;123" | awk 'BEGIN {FS="[:;,]"} {print $4}' 
+```
+
+The output is
+
+```bash
+44
+```
+
+As a side remark: If you find it very difficult to use **awk** to extract content from the specific fields, there is also a much simpler, but also much less powerful, command **cut**. For instance:
+
+```bash
+$ echo A BBB CC | cut -d " " -f 3 
+CC
+```
+
+In the above snippet, we have defined the field delimiter with the flag '-d' to be the empty character " " (by default, the field delimiter in **cut** command is TAB), and with the flag '-f' we have specified that we want the content of the 3rd field, which is 'CC' in the example above.
+
+The main limitation of **awk**, when used within **Bash** scripts, is that it cannot directly process the values from the **Bash** variables. We need to initialize first with additional syntax using the option `-v` some internal **awk** variables with the content of **Bash** variables before we can use them during **awk** execution, which in practice can be a bit, well, awkward...
+
+```bash
+$ Var=44
+$ awk 'BEGIN {print Var}'
+
+$ awk -v x=$Var 'BEGIN {print x}'
+44
+```
+
+This particular limitation is not present in the command **sed**, which we cover next.
+
+### 3. **sed** <a href="#sed" id="sed"></a>
+
+Finally, there is **sed** ('Stream Editor'), a non-interactive text file editor. It parses the command output or file content line-by-line, and performs specified operations on them. Typically, **sed** covers the following use cases:
+
+1. printing selected lines from a file;
+2. inserting new lines in a file;
+3. deleting specified lines in a file;
+4. searching for and replacing the patterns in a file.
+
+We illustrate all four use cases with a few basic examples.
+
+**Example 1:** How to print only the specified lines from the command output? As a concrete example, we consider the output of **stat** command:
+
+```bash
+stat test.sh
+```
+
+The output is:
+
+```bash
+ File: test.sh
+  Size: 177             Blocks: 0          IO Block: 4096   regular file
+Device: 2h/2d   Inode: 21673573207029672  Links: 1
+Access: (0666/-rw-rw-rw-)  Uid: ( 1000/abilandz)   Gid: ( 1000/abilandz)
+Access: 2020-05-01 12:46:20.551223700 +0200
+Modify: 2020-05-29 08:32:38.081673700 +0200
+Change: 2020-05-29 08:32:38.081673700 +0200
+ Birth: -
+```
+
+If we want to print only a particular line on the screen, we need to use **sed** with the flag '-n' and the specifier 'p' ('print'). Flag '-n' is needed to suppress the default printout of the original file. To print only the 2nd line, we can use the following syntax:
+
+```bash
+stat test.sh | sed -n 2p
+```
+
+The output is now only the 2nd line:
+
+```bash
+Size: 177             Blocks: 0          IO Block: 4096   regular file
+```
+
+With the slightly modified specifier, we can indicate the line ranges. For instance, the syntax
+
+```bash
+stat test.sh | sed -n 2,5p
+```
+
+will print lines 2, 3, 4 and 5, and so on.
+
+**Example 2:** How to insert a new 2nd line of text in the already existing file `sedTest.dat`, which has the following content:
+
+```
+line 1
+line 2
+line 3
+line 4
+```
+
+In general, to insert a new line with **sed**, we need to use the specifier 'i'. The solution is:
+
+```bash
+sed "2i Some text" sedTest.dat
+```
+
+This will insert in the second line (the meaning of '2i' specifier) of the file `sedTest.dat` the new text 'Some text'. The original file has not been modified, only the **sed** output stream. The **sed** output stream on the screen is:
+
+```bash
+line 1
+Some text
+line 2
+line 3
+line 4
+```
+
+We remark that a number of empty characters between the specifier 'i' and the following text is irrelevant &mdash; the very same results as above are achieved, for instance, with:
+
+```bash
+sed "2iSome text" sedTest.dat
+sed "2i    Some text" sedTest.dat
+sed "2   i    Some text" sedTest.dat
+```
+
+In case we want to start a new text with a literal empty character, we have to escape it:
+
+```bash
+$ sed "2i\ Some text" sedTest.dat
+line 1
+ Some text
+line 2
+line 3
+line 4
+```
+
+The above modified output stream can be redirected to a new file with `1> someFile`, but we can also modify in-place the original file. To achieve this, we need to use the flag `-i` ('in-place edit') for **sed** :
+
+```bash
+sed -i "2i Some text" sedTest.dat
+```
+
+This will insert in the 2nd line of the file `sedTest.dat` the new text 'Some text' and the original file is modified, without backup. Remember in this context the different meanings of 'i':
+
+* '-i' used as a flag instructs **sed** that we want to modify the original file in-place;
+* 'ni' used as an argument indicates that we want to insert something on the nth line.
+
+Clearly, modifying the original file in place can be dangerous, because once it's overwritten, there is no easy way to recover it. To prevent that, we can automatically create a backup of the original file by using the slightly modified flag '-i.backup':
+
+```bash
+sed -i.backup "2i Some text" sedTest.dat
+```
+
+This will insert in the second line of the file `sedTest.dat` the new text 'Some text'. The original file is modified, but now also the backup of the original file was created automatically, and is saved in a new file named `sedTest.dat.backup`.
+
+Analogously, we can insert a new line on-the-fly in the output stream of some command:
+
+```bash
+stat test.sh | sed "4i => File permissions, and other thingies:"
+```
+
+The output is:
+
+```bash
+  File: test.sh
+  Size: 62              Blocks: 0          IO Block: 4096   regular file
+Device: 2h/2d   Inode: 26740122787573808  Links: 1
+=> File permissions, and other thingies:
+Access: (0666/-rw-rw-rw-)  Uid: ( 1000/abilandz)   Gid: ( 1000/abilandz)
+Access: 2020-05-11 12:38:23.820690300 +0200
+Modify: 2020-05-14 13:13:46.970442600 +0200
+Change: 2020-05-14 13:13:46.970442600 +0200
+ Birth: -
+```
+
+Using this functionality, we can easily personalize the printout of any command.
+
+**Example 3a:** How to delete the 4th line from the above file `sedTest.dat`?
+
+We need to use the specifier 'd' ('delete') in **sed**, to delete lines in the file's or in the command's output stream. For instance, if we want to delete the 4th line, we can use the following syntax:
+
+```bash
+sed "4d" sedTest.dat
+```
+
+This will delete the 4th line ('4d' specifier) in the file `sedTest.dat`. We can also specify the line ranges for deletion, for instance:
+
+```bash
+sed "2,4d" sedTest.dat
+```
+
+This will delete the 2nd, 3rd and 4th lines in the file `sedTest.dat`. The previous comments about in-place modification and how to make a backup of the original file apply also in this context.
+
+**Example 3b:** How to delete the lines holding only specific text pattern?
+
+This is another frequently used case of **sed** command, and the generic solution is:
+
+```bash
+sed "/somePattern/d" someFile
+```
+
+or equivalently:
+
+```bash
+someCommand | sed "/somePattern/d"
+```
+
+For instance:
+
+```bash
+$ stat test.sh | sed "/Access/d"
+ File: test.sh
+  Size: 177             Blocks: 0          IO Block: 4096   regular file
+Device: 2h/2d   Inode: 21673573207029672  Links: 1
+Modify: 2020-05-29 08:32:38.081673700 +0200
+Change: 2020-05-29 08:32:38.081673700 +0200
+ Birth: -
+```
+
+In the above output, the lines holding the string "Access", namely:
+
+```bash
+Access: (0666/-rw-rw-rw-)  Uid: ( 1000/abilandz)   Gid: ( 1000/abilandz)
+Access: 2020-05-01 12:46:20.551223700 +0200
+```
+
+have been deleted.
+
+**Example 4:** We also illustrate how to replace one pattern in the file with another. This is achieved with the following generic syntax:
+
+```bash
+sed "s/firstPattern/secondPattern/" someFile
+```
+
+This will substitute (the 's' specifier) in each line of file `someFile` only the first occurrence of `firstPattern` with `secondPattern`. On the other hand, if we want to replace all occurrences, we need to use the following, slightly modified syntax:
+
+```bash
+sed "s/firstPattern/secondPattern/g" someFile
+```
+
+Note the additional specifier 'g' (for 'global') at the end of an expression. For instance, if we consider the file `example.log` with the following content:
+
+```bash
+momentum energy
+energy momentum momentum
+momentum energy momentum
+```
+
+We can replace only the first occurrence of 'momentum' with 'p' on each line with the following syntax:
+
+```bash
+sed "s/momentum/p/" example.log
+```
+
+The result is:
+
+```bash
+p energy
+energy p momentum
+p energy momentum
+```
+
+On the other hand, we can replace all occurrences of 'momentum' with 'p' on each line with the slightly modified syntax:
+
+```bash
+sed "s/momentum/p/g" example.log
+```
+
+Now the result is:
+
+```bash
+p energy
+energy p p
+p energy p
+```
+
+**Example 5:** Finally, and continuing with the previous example, we illustrate how to delete a string within a line of input &mdash; one simply specifies as a second pattern in substitution a zero-length string:
+
+```bash
+# delete first occurence of "momentum" on each line:
+$ sed "s/momentum//" example.log
+ energy
+energy  momentum
+ energy momentum
+
+# delete all occurences of "momentum" on each line:
+$ sed "s/momentum//g" example.log
+ energy
+energy  
+ energy
+```
+
+The very convenient thing about **sed** is that it can interpret **Bash** variables directly. It is perfectly feasible to have in a script something like:
+
+```bash
+Before=OldPatern
+After=NewPatern
+sed "s/${Before}/${After}/" someFile
+```
+
+This gives a lot of flexibility because old and new patterns can be supplied via arguments to scripts or functions, etc. In the same spirit, we can use **sed** to modify on-the-fly the output stream of any command:
+
+```bash
+$ date
+Wed Jun  3 21:08:49 CEST 2020
+$ date | sed "s/Wed/Wednesday/"
+Wednesday Jun  3 21:08:49 CEST 2020
+```
+
+As a concluding remark about **sed**, we note that multiple commands can be specified and executed in one go using the option '-e' and separating them with ';' as an end of command input separator. For instance:
+
+```bash
+$ echo "some text" | sed -e "s/text/TEXT/; s/some/SOME/"
+SOME TEXT
+```
+
+This will run faster than calling separately two instances of **sed** for each pattern replacement:
+
+```bash
+$ echo "some text" | sed "s/text/TEXT/" | sed "s/some/SOME/"
+SOME TEXT
+```
+
+This is true in general when calling external-to-shell commands: Instead of running each command invocation in its own process, you do as many things as possible in a single command invocation, otherwise, you lose performance.
+
+Finally, we remark that **sed** by default supports _"Basic Regular Expressions (BRE)"_, while its variant **sed -E** supports _"Extended Regular Expressions (ERE)"_.

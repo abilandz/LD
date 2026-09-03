@@ -1,0 +1,161 @@
+![](../../../Common_Figures/LinuxBash_logos_small.png)
+
+# Command substitution operator
+
+**Last update**: 20260903-1
+
+We have already seen that a value can be stored in a variable by explicit assignment (using the operator `=`), or by supplying variables as command-line arguments (positional parameters) to a script or a function. In practice, however, one often wants to store the output of some command, or even the content of an external file, directly into a variable. This can be achieved with the so-called _command substitution operator_ `$( ... )`. For instance, we have already seen that the file size in bytes can be printed with the following:
+
+```bash
+stat -c %s someFile
+```
+
+But how can we fetch the printout of above command programmatically, and do some manipulation with it later in our code? This is precisely the case when we need to use the command substitution operator:
+
+```bash
+FileSize=$(stat -c %s someFile)
+```
+
+Now the size of file 'someFile' is stored directly in the variable **FileSize** and from this point onwards we can obtain content of that variable in the same way as the content of any other variable:
+
+```bash
+echo ${FileSize}
+```
+
+The operator `$( ... )` can do much more than that. For instance, it can literally in-line the output of any command at the place where this operator is used.
+
+**Example 1**: How to produce the following single-line output, with the current timestamp embedded:
+
+```bash
+Today is Mo 20. Mai 15:33:07 CEST 2019 . What a nice day...
+```
+
+This can be achieved with:
+
+```bash
+echo "Today is $(date) . What a nice day..."
+```
+
+The command substitution operator literally in-lined the output of the **date** command at the place where it was used. This way, we can very elegantly achieve the desired more complex functionality by combining in the very same command input multiple commands, which otherwise we would need to execute one-by-one.
+
+Command substitution operator `$( ... )` is a very neat construct, and it is used frequently. One classical use case is to avoid hardwiring any specific information in your code, since that specification can change from one computer to another. In this way, we can improve a lot the portability of code.
+
+You can fearlessly nest the command substitution operators, like in the following example.
+
+**Example 2**: How can you get programmatically only the name of the parent directory of the directory in which your script sits?
+
+To solve this problem, we need first to introduce two widely used **Linux** commands in this context: **basename** and **dirname**. The command **basename** is typically used in the following way: It takes as an argument the absolute path to some directory or file, and drops the part which corresponds to an absolute path. This is illustrated with the following code snippets:
+
+```bash
+$ DirectoryPath=/home/abilandz/Lecture/PH8124/Lecture_5
+$ basename ${DirectoryPath}
+Lecture_5 # only the directory name is printed
+```
+
+On the other hand, the command **dirname** does the opposite: It prints only the absolute path to the specified directory or file. If we reuse the above example:
+
+```bash
+$ DirectoryPath=/home/abilandz/Lecture/PH8124/Lecture_5
+$ dirname ${DirectoryPath} 
+/home/abilandz/Lecture/PH8124 # only the abs. path is printed
+```
+
+The commands **basename** and **dirname** can be used in exactly the same way for files.
+
+Therefore, the solution to our initial problem can be fairly elegant and concise, if we use these two commands in combination with the command substitution operator:
+
+```bash
+$ DirectoryPath=/home/abilandz/Lecture/PH8124/Lecture_5
+$ ParentDirectoryName=$(basename $(dirname $DirectoryPath))
+$ echo $ParentDirectoryName
+PH8124 # only the parent directory name of DirectoryPath is printed
+```
+
+In case a directory or file path is given in terms of a relative path, one first resolves that relative path into an absolute path using the command **realpath**, whose example use case is illustrated here:
+
+```bash
+# print current working directory:
+$ echo $PWD
+/home/abilandz/Lecture/PH8124
+
+# define directory path using relative path to current working directory:
+$ DirectoryPath="./Lecture_5"
+
+# resolve the relative path into absolute path:
+$ realpath $DirectoryPath
+/home/abilandz/Lecture/PH8124/Lecture_5
+
+# resolve the relative path of current working directory:
+$ realpath .
+/home/abilandz/Lecture/PH8124
+
+# resolve the relative path of the parent directory of current working directory:
+$ realpath ..
+/home/abilandz/Lecture
+```
+
+Therefore, the previous example using relative paths, and in addition the **realpath** command, is:
+
+```bash
+$ cd /home/abilandz/Lecture/PH8124
+$ DirectoryPath=./Lecture_5
+$ ParentDirectoryName=$(basename $(dirname $(realpath $DirectoryPath)))
+$ echo $ParentDirectoryName
+PH8124 # only the parent directory name of DirectoryPath is printed
+```
+
+We can use multiple commands within the same command substitution operator, they just need to be separated with delimiter `;` as in the following example:
+
+```bash
+Var=$(date;pwd)
+echo "$Var"
+```
+
+The printout is
+
+```
+Thu May 14 11:58:28 CEST 2020
+/home/abilandz/Lecture
+```
+
+It is perfectly fine to inline the output of function call with this operator as well:
+
+```bash
+echo "Output of my function is: $(someFunction) . Very nice!" 
+```
+
+or to store the printout of a function in a variable:
+
+```bash
+Var=$(someFunction)
+```
+
+Finally, the very neat use case of the command substitution operator is to store the content of some external file in a variable. The relevant syntax is:
+
+```bash
+FileContent=$(< someFile) 
+```
+
+In the above example, `<` is just a shortcut for the command **cat**, which can be used equivalently in this context:
+
+```bash
+FileContent=$(cat someFile) 
+```
+
+This great functionality circumvents the necessity of dealing with too many temporary files during the code execution, when we are interested to keep the file content only at a particular time. With the above definitions, the following two commands yield exactly the same answer initially:
+
+```bash
+cat someFile # reads the content of a physical file
+echo "${FileContent}" # obtain the same content from variable
+```
+
+However, if the content of the physical file `someFile` has changed or if it was deleted, that does not affect the value of variable **FileContent**. This is very handy when we need to initialize our script or function with the content of some external file, which can be modified concurrently with some other running process &mdash; if we store that information in a variable, we have removed completely the dependency of our code on that external file.
+
+For historical reasons, we would like to remark that the backticks `` ` ... ` `` do the same thing as command substitution operator `$( ... )`:
+
+```bash
+echo "Today is: $(date) . Thanks for the info."
+echo "Today is: `date` . Thanks for the info."
+```
+
+**Bash** supports backticks in this context only for backward compatibility with some very old shells. There is, however, one important difference: Nesting of backticks `` ` ... ` `` does not work properly, only the nesting of command substitution operator `$( ... )` is reliable. That being said, `$( ... )` shall be always preferred in **Bash** scripts over backticks `` ` ... ` ``.
