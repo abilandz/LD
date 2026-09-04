@@ -7,7 +7,7 @@ This webpage contains the material for the crash course on **Linux OS** and **Ba
 ### Outline
 
 **Day 1 (morning):**
-* [Introduction to Linux OS and shell scripting](day-1/01..md)
+* [Introduction to Linux OS and shell scripting](day-1/01.md)
 * [Shell environment: commands and variables](day-1/02.md)
 * [Special configuration files](day-1/03.md)
 * [Your first shell script](day-1/04.md)
